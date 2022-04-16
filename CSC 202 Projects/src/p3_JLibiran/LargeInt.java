@@ -9,6 +9,7 @@ package p3_JLibiran;
 import java.util.Iterator;
 
 public class LargeInt {
+
 	protected LargeIntList numbers; // Holds digits
 
 	// Constants for sign variable
@@ -41,12 +42,14 @@ public class LargeInt {
 		byte digitByte;
 
 		firstDigitPosition = 0;
-		if (intString.charAt(0) == '+') // Skip leading plus sign
-			firstDigitPosition = 1;
-		else if (intString.charAt(0) == '-') // Handle leading minus sign
-		{
+		if (intString.charAt(0) == '1') { // Skip leading 1 sign
 			firstDigitPosition = 1;
 			sign = MINUS;
+		}
+
+		else // Handle leading 0 sign
+		{
+			firstDigitPosition = 1;
 		}
 
 		lastDigitPosition = intString.length() - 1;
@@ -66,20 +69,17 @@ public class LargeInt {
 	public String toString() {
 		Byte element;
 
-		String largeIntString = "0";
-//		if (sign == PLUS)
-//			largeIntString = "0";
-//		else
-//			largeIntString = "1";
+		String largeIntString;
+		if (sign == PLUS)
+			largeIntString = "";
+		else
+			largeIntString = "-";
 
-		int count = numbers.size();
+
 		Iterator<Byte> forward = numbers.forward();
 		while (forward.hasNext()) {
 			element = forward.next();
 			largeIntString = largeIntString + element;
-//			if ((((count - 1) % 3) == 0) && (count != 1))
-//				largeIntString = largeIntString + ",";
-			count--;
 		}
 		return (largeIntString);
 	}
@@ -92,6 +92,8 @@ public class LargeInt {
 
 	{
 		boolean greater = false;
+		first = removeLeadingZeroes(first);
+		second = removeLeadingZeroes(second);
 		if (first.size() > second.size())
 			greater = true;
 		else if (first.size() < second.size())
@@ -170,57 +172,57 @@ public class LargeInt {
 	//
 	// Returns a specialized list that is the difference of the two argument lists
 	{
-		byte digit1;
-		byte digit2;
-		byte temp;
+		byte minuend;
+		byte subtrahend;
 		boolean borrow = false;
 
-		int largerLength = larger.size();
-		int smallerLength = smaller.size();
+		int minuendLength = larger.size();
+		int subtrahendLength = smaller.size();
 		int lengthDiff;
 
 		LargeIntList result = new LargeIntList();
 
-		Iterator<Byte> largerReverse = larger.reverse();
-		Iterator<Byte> smallerReverse = smaller.reverse();
+		Iterator<Byte> minuendReverse = larger.reverse();
+		Iterator<Byte> subtrahendReverse = smaller.reverse();
 
 		// Process both lists while both have digits.
-		for (int count = 1; count <= smallerLength; count++) {
-			digit1 = largerReverse.next();
+		for (int count = 1; count <= subtrahendLength; count++) {
+			minuend = minuendReverse.next();
 			if (borrow) {
-				if (digit1 != 0) {
-					digit1 = (byte) (digit1 - 1);
-					borrow = false;
+				if (minuend == 0) {
+					minuend = (byte) (2);
+
 				} else {
-					digit1 = 0;
-					borrow = true;
+					minuend = 0;
+					borrow = false;
 				}
 			}
 
-			digit2 = smallerReverse.next();
+			subtrahend = subtrahendReverse.next();
 
-			if (digit2 <= digit1)
-				result.addFront((byte) (digit1 - digit2));
-			else {
+			if (subtrahend > minuend) {
+				result.addFront((byte) (2 - subtrahend));
 				borrow = true;
-				result.addFront((byte) (digit1 + 1 - digit2));
+			} else {
+				result.addFront((byte) (minuend - subtrahend));
 			}
+
 		}
 
 		// Finish processing of leftover digits
-		lengthDiff = (largerLength - smallerLength);
+		lengthDiff = (minuendLength - subtrahendLength);
 		for (int count = 1; count <= lengthDiff; count++) {
-			digit1 = largerReverse.next();
+			minuend = minuendReverse.next();
 			if (borrow) {
-				if (digit1 != 0) {
-					digit1 = (byte) (digit1 - 1);
-					borrow = false;
+				if (minuend == 0) {
+					minuend = (byte) (2);
+
 				} else {
-					digit1 = 0;
-					borrow = true;
+					minuend = 0;
+					borrow = false;
 				}
 			}
-			result.addFront(digit1);
+			result.addFront(minuend);
 		}
 
 		return result;
@@ -230,58 +232,162 @@ public class LargeInt {
 	// Returns a specialized list that is a byte-by-byte sum of the two
 	// argument lists
 	{
-		byte multiplier;
-		byte multiplicand;
-		byte temp;
-		byte tempDigit;
-		byte carry = 0;
+		byte multiplier, multiplicand;
 
 		int multiplierLength = first.size();
 		int multiplicandLength = second.size();
-		int lengthDiff;
 
 		LargeIntList result = new LargeIntList();
 		LargeIntList tempList;
 
-
 		Iterator<Byte> multiplierReverse;
 		Iterator<Byte> multiplicandReverse = second.reverse();
-		Iterator<Byte> tempListReverse;
+
 		// Process both lists while both have digits
 		for (int i = 1; i <= multiplicandLength; i++) {
 			tempList = new LargeIntList();
 			multiplicand = multiplicandReverse.next();
-			
-			for(int z = 1; z < i; z++) {
+
+			for (int z = 1; z < i; z++) {
 				tempList.addEnd((byte) 0);
 			}
-			
-			multiplierReverse  = first.reverse();
-			for(int j = 1; j <= multiplierLength; j++) {
+
+			multiplierReverse = first.reverse();
+			for (int j = 1; j <= multiplierLength; j++) {
 				multiplier = multiplierReverse.next();
 				tempList.addFront((byte) (multiplier * multiplicand));
 			}
-			
-			tempListReverse = tempList.reverse();
-			tempDigit = tempListReverse.next();
-			
+
 			result = addLists(tempList, result);
-			
+
 		}
 
-//		// Finish processing of leftover digits
-//		lengthDiff = (largerLength - smallerLength);
-//		for (int count = 1; count <= lengthDiff; count++) {
-//			digit1 = largerReverse.next();
-//			temp = (byte) (digit1 + carry);
-//			carry = (byte) (temp / 2);
-//			result.addFront((byte) (temp % 2));
-//		}
-//		
-//		if (carry != 0)
-//			result.addFront((byte) carry);
+		return result;
+	}
+
+	protected static LargeIntList divideLists(LargeIntList first, LargeIntList second) {
+		LargeIntList result = new LargeIntList();
+		LargeIntList tempDividend = new LargeIntList();
+		LargeIntList remainder = new LargeIntList();
+		LargeIntList newFirst = new LargeIntList();
+		LargeIntList newSecond = new LargeIntList();
+		byte dividend;
+
+		// remove leading zeroes
+		newFirst = removeLeadingZeroes(first);
+		newSecond = removeLeadingZeroes(second);
+
+		Iterator<Byte> dividendForward = newFirst.forward();
+		int dividendLength = newFirst.size();
+
+		// while there are still numbers to be processed
+		for (int i = 1; i <= dividendLength; i++) {
+
+			dividend = dividendForward.next();
+			tempDividend.addEnd(dividend);
+
+			// compare parts of dividend with the divisor
+			if (greaterList(tempDividend, newSecond)) {
+				// dividend > divisor
+				result.addEnd((byte) 1);
+			} else if (greaterList(newSecond, tempDividend)) {
+				// divisor > dividend
+				result.addEnd((byte) 0);
+			} else {
+				result.addEnd((byte) 1);
+			}
+
+			// find what to subtract by
+			if (result.listLast.getInfo() == 1) {
+				remainder = newSecond;
+			} else {
+				remainder = new LargeIntList();
+				remainder.addEnd((byte) 0);
+			}
+
+			tempDividend = subtractLists(tempDividend, remainder);
+		}
+
+
 
 		return result;
+	}
+
+	protected static LargeIntList modulusLists(LargeIntList first, LargeIntList second) {
+		LargeIntList result = new LargeIntList();
+		LargeIntList tempDividend = new LargeIntList();
+		LargeIntList remainder = new LargeIntList();
+		LargeIntList newFirst = new LargeIntList();
+		LargeIntList newSecond = new LargeIntList();
+		byte dividend;
+
+		// remove leading zeroes
+		newFirst = removeLeadingZeroes(first);
+		newSecond = removeLeadingZeroes(second);
+
+		Iterator<Byte> dividendForward = newFirst.forward();
+		int dividendLength = newFirst.size();
+
+		// while there are still numbers to be processed
+		for (int i = 1; i <= dividendLength; i++) {
+
+			dividend = dividendForward.next();
+			tempDividend.addEnd(dividend);
+
+			// compare parts of dividend with the divisor
+			if (greaterList(tempDividend, newSecond)) {
+				// dividend > divisor
+				result.addEnd((byte) 1);
+			} else if (greaterList(newSecond, tempDividend)) {
+				// divisor > dividend
+				result.addEnd((byte) 0);
+			} else {
+				result.addEnd((byte) 1);
+			}
+
+			// find what to subtract by
+			if (result.listLast.getInfo() == 1) {
+				remainder = newSecond;
+			} else {
+				remainder = new LargeIntList();
+				remainder.addEnd((byte) 0);
+			}
+
+			tempDividend = subtractLists(tempDividend, remainder);
+		}
+
+
+
+		return tempDividend;
+	}
+	
+	private static LargeIntList removeLeadingZeroes(LargeIntList list) {
+		// removes leading zeroes
+		LargeIntList newList = new LargeIntList();
+		Iterator<Byte> listIterator = list.forward();
+
+
+		byte next = listIterator.next();
+
+		// while next isn't a 1
+		while (listIterator.hasNext()) {
+
+			if (next == 0) {
+				next = listIterator.next();
+			} else {
+				newList.addEnd(next);
+				break;
+			}
+		}
+		
+		
+		// adds list without leading zeroes to new list
+		while (listIterator.hasNext()) {
+			newList.addEnd(listIterator.next());
+		}
+
+
+		return newList;
 	}
 
 	public static LargeInt add(LargeInt first, LargeInt second)
@@ -313,22 +419,9 @@ public class LargeInt {
 	// Returns a LargeInt that is the difference of the two argument LargeInts
 	{
 		LargeInt diff = new LargeInt();
-		StringBuffer str = new StringBuffer();
 
-		// Create an inverse of second
-//		LargeInt negSecond = new LargeInt();
-		LargeInt negSecond = new LargeInt(twosComplement(str.append(second.toString())));
-		
-		
-		negSecond.sign = !second.sign;
-		Iterator<Byte> secondForward = second.numbers.forward();
-		
-		int length = second.numbers.size();
-		for (int count = 1; count <= length; count++)
-			negSecond.numbers.addEnd(secondForward.next());
-
-		// Add first to inverse of second
-		diff = add(first, negSecond);
+		second.sign = !second.sign;
+		diff = add(first, second);
 
 		return diff;
 	}
@@ -337,56 +430,41 @@ public class LargeInt {
 		LargeInt product = new LargeInt();
 
 		product.numbers = multiplyLists(first.numbers, second.numbers);
-		
+
 		if (first.sign != second.sign) {
 			// order doesn't matter for multiplication, only sign
 			product.sign = !product.sign;
-		} 
+		}
 
 		return product;
 
 	}
 
-
 	public static LargeInt divide(LargeInt first, LargeInt second) {
 		LargeInt quotient = new LargeInt();
+
+		quotient.numbers = divideLists(first.numbers, second.numbers);
 		
-		
-		
+		if (first.sign != second.sign) {
+			// order doesn't matter for multiplication, only sign
+			quotient.sign = !quotient.sign;
+		}
+
 		return quotient;
 	}
 	
-	protected static String twosComplement(StringBuffer input) {
-		// Outputs the twos complement of Input
+	public static LargeInt modulus(LargeInt first, LargeInt second) {
+		LargeInt modulo = new LargeInt();
 		
-	    int n = input.length();
-	      
-        // Traverse the string to get first '1' from
-        // the last of string
-        int i;
-        for (i = n-1 ; i >= 0 ; i--)
-            if (input.charAt(i) == '1')
-                break;
-      
-        // If there exists no '1' concat 1 at the
-        // starting of string
-        if (i == -1)
-            return "1" + input;
-      
-        // Continue traversal after the position of
-        // first '1'
-        for (int k = i-1 ; k >= 0; k--)
-        {
-            //Just flip the values
-            if (input.charAt(k) == '1')
-                input.replace(k, k+1, "0");
-            else
-                input.replace(k, k+1, "1");
-        }
-      
-        // return the modified string
-        return input.toString();
-    
+		modulo.numbers = modulusLists(first.numbers, second.numbers);
+		
+		if (first.sign != second.sign) {
+			// order doesn't matter for multiplication, only sign
+			modulo.sign = !modulo.sign;
+		}
+		
+		return modulo;
+
 	}
-	
+
 }// end main
